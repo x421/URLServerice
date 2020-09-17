@@ -6,4 +6,5 @@ sudo: false
 install: true
 script:
   - env GO111MODULE=on go build
+  - cd ./tests
   - env GO111MODULE=on go test
