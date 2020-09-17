@@ -3,12 +3,17 @@ package controllers
 import (
 	f "LinksService/functions"
 	s "LinksService/structs"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
 )
 
-type BaseHandler s.BaseHandler
+type BaseHandler struct {
+	Select s.SelectShortURL
+	Insert s.InsertURLs
+	Db     *sql.DB
+}
 
 func (bh *BaseHandler) SetShortLink(writer http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPost { // кроме пост есть еще что то
@@ -19,7 +24,7 @@ func (bh *BaseHandler) SetShortLink(writer http.ResponseWriter, request *http.Re
 	var ClientData s.URL
 	err := json.NewDecoder(request.Body).Decode(&ClientData)
 	if err != nil {
-		http.Error(writer, err.Error(), http.StatusBadRequest)
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -33,10 +38,7 @@ func (bh *BaseHandler) SetShortLink(writer http.ResponseWriter, request *http.Re
 		ClientData.Short = f.CreateLink(request.RemoteAddr, ClientData.URI)
 	}
 
-	// отображать схему таблицы не самая лучшая затея+
-	db := bh.Db
-
-	_, err = db.Exec("INSERT INTO links(`userLink`, `shortLink`) VALUES (?, ?)", ClientData.URI, ClientData.Short)
+	err = bh.Insert(ClientData.URI, ClientData.Short, bh.Db)
 
 	// не факт конечно что эти ошибки, но эти вероятны в 99 случаях
 	if err != nil {
@@ -46,35 +48,26 @@ func (bh *BaseHandler) SetShortLink(writer http.ResponseWriter, request *http.Re
 
 	writer.Header().Set("Content-Type", "application/json")
 	var ret s.ReturnURL
-	ret.URL = request.Host +"/"+ ClientData.Short
+	ret.URL = request.Host + "/" + ClientData.Short
 	json.NewEncoder(writer).Encode(ret)
 }
 
 func (bh *BaseHandler) RedirectHandler(writer http.ResponseWriter, request *http.Request, path string) {
-	db := bh.Db
-
-	rows, err := db.Query("SELECT userLink FROM links WHERE shortLink = ?", path)
+	link, err := bh.Select(path, bh.Db) //db.Query("SELECT userLink FROM links WHERE shortLink = ?", path)
 
 	if err != nil {
-		http.Error(writer, "DB select error", http.StatusBadRequest)
+		http.Error(writer, "DB select error", http.StatusBadGateway)
 		return
 	}
 
-	defer rows.Close()
-	var link string
-
-	if rows.NextResultSet() == true {
-		rows.Next()
-		rows.Scan(&link)
+	if link != "" {
+		http.Redirect(writer, request, link, http.StatusFound)
 	} else {
-		http.Error(writer, "Not Found", 404)
-		return
+		http.Error(writer, "Not Found", http.StatusNotFound)
 	}
-
-	http.Redirect(writer, request, link, 301)
 }
 
-func (bh *BaseHandler) Index(writer http.ResponseWriter, request *http.Request){
+func (bh *BaseHandler) Index(writer http.ResponseWriter, request *http.Request) {
 	if request.URL.Path != "/" {
 		bh.RedirectHandler(writer, request, string([]rune(request.URL.Path)[1:]))
 		return

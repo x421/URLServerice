@@ -4,15 +4,19 @@ import (
 	c "LinksService/controllers"
 	f "LinksService/functions"
 	"bytes"
+	"database/sql"
+	"errors"
+	"github.com/betable/sqlmock"
+	_ "github.com/go-sql-driver/mysql"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 )
 
-func TestTest(t *testing.T) {
-	ip, url:="1", "2"
-	link1:=f.CreateLink(ip, url)
-	link2:=f.CreateLink(ip, url)
+func TestCreateLink(t *testing.T) {
+	ip, url := "1", "2"
+	link1 := f.CreateLink(ip, url)
+	link2 := f.CreateLink(ip, url)
 
 	if link1 != link2 {
 		t.Errorf("Not equal!")
@@ -21,54 +25,177 @@ func TestTest(t *testing.T) {
 }
 
 func TestValidateLink(t *testing.T) {
-	link:="http://google.com"
-	res:=f.ValidateLink(link)
+	link := "http://google.com"
+	res := f.ValidateLink(link)
 
 	if res == false {
 		t.Errorf("http://google.com isnt valid!")
 	}
 
-	link="htp://google.com"
-	res=f.ValidateLink(link)
+	link = "1.com"
+	res = f.ValidateLink(link)
 
 	if res == true {
-		t.Errorf("HTP://google.com is valid!")
+		t.Errorf("1.com is valid!")
 	}
 
-	link="http://google."
-	res=f.ValidateLink(link)
+	link = "google.ru"
+	res = f.ValidateLink(link)
 
 	if res == true {
-		t.Errorf("HTP://google. is valid!")
+		t.Errorf("google.ru is valid!")
 	}
 }
 
-func TestShortLink(t *testing.T) {
-	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
-	// pass 'nil' as the third parameter.
+func TestSetShortLink_Valid(t *testing.T) {
 	req, err := http.NewRequest("POST", "/setShort", bytes.NewBuffer([]byte(`{"URI":"http://google.com", "Short":"tgdfvc"}`)))
 	if err != nil {
 		t.Fatal(err)
 	}
 	req.Header.Add("Content-type", "application/json")
-	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
-	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(c.SetShortLink)
 
-	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
-	// directly and pass in our Request and ResponseRecorder.
+	bh := c.BaseHandler{
+		Db: nil,
+		Select: func(shortURL string, db *sql.DB) (string, error) {
+			return "", nil
+		},
+		Insert: func(fullURL, shortURL string, db *sql.DB) error {
+			return nil
+		},
+	}
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(bh.SetShortLink)
+
 	handler.ServeHTTP(rr, req)
 
-	// Check the status code is what we expect.
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("handler returned wrong status code: got %v want %v",
 			status, http.StatusOK)
 	}
 
-	// Check the response body is what we expect.
-	expected := `{"URL": "`+req.Host+`/tgdfvc"}`
-	if rr.Body.String() != expected {
+	expected := `{"URL":"` + req.Host + `/tgdfvc"}`
+	res := rr.Body.String()
+	res = res[:len(res)-1]
+	if res != expected {
 		t.Errorf("handler returned unexpected body: got %v want %v",
 			rr.Body.String(), expected)
+	}
+}
+
+func TestSetShortLink_InvalidMethod(t *testing.T) {
+	req, err := http.NewRequest("GET", "/setShort", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	bh := c.BaseHandler{
+		Db: nil,
+		Select: func(shortURL string, db *sql.DB) (string, error) {
+			return "", nil
+		},
+		Insert: func(fullURL, shortURL string, db *sql.DB) error {
+			return nil
+		},
+	}
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(bh.SetShortLink)
+
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusBadRequest {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
+	}
+}
+
+func TestRedirectHandler(t *testing.T) {
+	req, err := http.NewRequest("GET", "/fgdfhfg", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	bh := c.BaseHandler{
+		Db: nil,
+		Select: func(shortURL string, db *sql.DB) (string, error) {
+			return "hello", nil
+		},
+		Insert: func(fullURL, shortURL string, db *sql.DB) error {
+			return nil
+		},
+	}
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(bh.Index)
+
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusFound {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
+	}
+
+	bh = c.BaseHandler{
+		Db: nil,
+		Select: func(shortURL string, db *sql.DB) (string, error) {
+			return "", nil
+		},
+		Insert: func(fullURL, shortURL string, db *sql.DB) error {
+			return nil
+		},
+	}
+
+	rr = httptest.NewRecorder()
+	handler = http.HandlerFunc(bh.Index)
+
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusNotFound {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
+	}
+
+	bh = c.BaseHandler{
+		Db: nil,
+		Select: func(shortURL string, db *sql.DB) (string, error) {
+			return "", errors.New("Mock")
+		},
+		Insert: func(fullURL, shortURL string, db *sql.DB) error {
+			return nil
+		},
+	}
+
+	rr = httptest.NewRecorder()
+	handler = http.HandlerFunc(bh.Index)
+
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusBadGateway {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
+	}
+}
+
+func TestInsertURLs(t *testing.T) {
+	db, err := sqlmock.New()
+	sqlmock.ExpectExec("INSERT INTO links(.*, .*) VALUES (.*, .*)").
+		WithArgs("http://google.com", "fgnbrt").
+		WillReturnResult(sqlmock.NewResult(0, 1))
+	err = f.InsertURLs("http://google.com", "fgnbrt", db)
+	if err != nil {
+		t.Errorf("Insert method failed!")
+	}
+}
+
+func TestSelectShortURL(t *testing.T) {
+	db, err := sqlmock.New()
+	sqlmock.ExpectQuery("SELECT userLink FROM links WHERE shortLink = (.*)").
+		WithArgs("hi").
+		WillReturnRows(sqlmock.NewRows([]string{"userLink"}).AddRow("http://google.com"))
+
+	_, err = f.SelectShortURL("hi", db)
+	if err != nil {
+		t.Errorf("Database null connection passed!")
 	}
 }

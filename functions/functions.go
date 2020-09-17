@@ -32,12 +32,24 @@ func ValidateLink(link string) bool {
 	return true
 }
 
-func CreateLink( ip, url string) string {
+func CreateLink(ip, url string) string {
 	str := strconv.FormatInt(time.Now().UTC().Unix(), 10)
 	str += ip
 	str += url
-	h:=md5.New()
+	h := md5.New()
 	h.Write([]byte(str))
 
 	return (hex.EncodeToString(h.Sum(nil)))[3:8]
+}
+
+func InsertURLs(fullURL, shortURL string, db *sql.DB) error {
+	_, err := db.Exec("INSERT INTO links(`userLink`, `shortLink`) VALUES (?, ?)", fullURL, shortURL)
+	return err
+}
+func SelectShortURL(shortURL string, db *sql.DB) (string, error) {
+	row := db.QueryRow("SELECT userLink FROM links WHERE shortLink = ?", shortURL)
+	link := ""
+	err := row.Scan(&link)
+
+	return link, err
 }
