@@ -178,8 +178,8 @@ func TestRedirectHandler(t *testing.T) {
 }
 
 func TestInsertURLs(t *testing.T) {
-	db, err := sqlmock.New()
-	sqlmock.ExpectExec("INSERT INTO links(.*, .*) VALUES (.*, .*)").
+	db, mock, err := sqlmock.New()
+	mock.ExpectExec("INSERT INTO links(.*, .*) VALUES (.*, .*)").
 		WithArgs("http://google.com", "fgnbrt").
 		WillReturnResult(sqlmock.NewResult(0, 1))
 	err = f.InsertURLs("http://google.com", "fgnbrt", db)
@@ -189,8 +189,8 @@ func TestInsertURLs(t *testing.T) {
 }
 
 func TestSelectShortURL(t *testing.T) {
-	db, err := sqlmock.New()
-	sqlmock.ExpectQuery("SELECT userLink FROM links WHERE shortLink = (.*)").
+	db, mock, err := sqlmock.New()
+	mock.ExpectQuery("SELECT userLink FROM links WHERE shortLink = (.*)").
 		WithArgs("hi").
 		WillReturnRows(sqlmock.NewRows([]string{"userLink"}).AddRow("http://google.com"))
 
