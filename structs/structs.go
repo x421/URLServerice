@@ -8,7 +8,9 @@ type URL struct {
 }
 
 type ReturnURL struct {
-	URL string
+	URL     string
+	ErrStr  string
+	ErrCode int
 }
 
 type InsertURLs func(fullURL, shortURL string, db *sql.DB) error

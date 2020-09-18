@@ -16,7 +16,7 @@ func ValidateUserShortURL(link string) bool {
 		return false
 	}
 
-	return ret && (len(link) < 25)
+	return ret && (len(link) < 25 && len(link) > 4)
 }
 
 func ValidateLink(link string) bool {
@@ -51,6 +51,10 @@ func SelectShortURL(shortURL string, db *sql.DB) (string, error) {
 	row := db.QueryRow("SELECT userLink FROM links WHERE shortLink = ?", shortURL)
 	link := ""
 	err := row.Scan(&link)
+
+	if err.Error() == "sql: no rows in result set" {
+		return link, nil
+	}
 
 	return link, err
 }

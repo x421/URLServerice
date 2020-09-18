@@ -64,6 +64,14 @@ func TestValidateUserShortURL(t *testing.T) {
 	if ret == true {
 		t.Errorf(str + " is valid. Why?")
 	}
+
+	str = "aaa" //30
+
+	ret = f.ValidateUserShortURL(str)
+
+	if ret == true {
+		t.Errorf(str + " is valid. Why?")
+	}
 }
 
 func TestValidateLink(t *testing.T) {
