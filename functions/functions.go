@@ -50,11 +50,8 @@ func InsertURLs(fullURL, shortURL string, db *sql.DB) error {
 func SelectShortURL(shortURL string, db *sql.DB) (string, error) {
 	row := db.QueryRow("SELECT userLink FROM links WHERE shortLink = ?", shortURL)
 	link := ""
-	err := row.Scan(&link)
+	// с этой ошибкой сложно stub
+	row.Scan(&link)
 
-	if err.Error() == "sql: no rows in result set" {
-		return link, nil
-	}
-
-	return link, err
+	return link, nil
 }
