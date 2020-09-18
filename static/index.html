@@ -1,0 +1,47 @@
+<html>
+<head>
+	<title>URLService</title>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+	<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+	<style>
+		.cent {
+			margin: auto
+		}
+	</style>
+</head>
+<body>
+	<input id="InputLink" class="form-control form-control-lg" type="text" placeholder="Enter you URL here!">
+	<input id="InputShortLink" class="form-control form-control-lg" type="text" placeholder="Enter prefered address!">
+	<button id="SendButton" type="button" class="btn btn-primary">Short!</button>
+	<div id="Result"></div>
+	<script>
+		$("#SendButton").click(function(e) {
+			e.preventDefault();
+			var URI = $("#InputLink").val()
+			var Short = $("#InputShortLink").val()
+
+			if(URI.length > 200 || ((5 > Short.length || Short.length > 25) && Short.length != 0))
+			{
+				$("#Result").text("Max size of URL: 200, 5<short<25 ")
+				return
+			}
+
+			$.ajax({
+				type: "POST",
+				url: "/setShort",
+				contentType: "application/json; charset=utf-8",
+				data: JSON.stringify({
+					"URI": URI,
+					"Short": Short
+				}),
+				success: function(result) {
+					$("#Result").text("Your short URL: "+result["URL"])
+				},
+				error: function(result) {
+					$("#Result").text("Server error!")
+				}
+			});
+		});
+	</script>
+</body>
+</html>

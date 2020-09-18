@@ -5,7 +5,6 @@ import (
 	s "LinksService/structs"
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"net/http"
 )
 
@@ -72,5 +71,6 @@ func (bh *BaseHandler) Index(writer http.ResponseWriter, request *http.Request) 
 		bh.RedirectHandler(writer, request, string([]rune(request.URL.Path)[1:]))
 		return
 	}
-	fmt.Fprintf(writer, "Hello")
+	http.ServeFile(writer, request, "static/index.html")
+	//fmt.Fprintf(writer, "Hello")
 }
