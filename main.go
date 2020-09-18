@@ -3,29 +3,28 @@ package main
 import (
 	c "LinksService/controllers"
 	f "LinksService/functions"
+	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
 	"net/http"
+	"os"
 )
 
-/*
-Валидацию ВСЕГО пользовательского ввода по полной!
-Отдельный файл под константы и глоб перем и ошибки?
-*/
 func main() {
-	/*
-		если джсон кривой
-	*/
-	db := f.GetSQLConnection("mysql", "root", "root", "localhost", "3306", "db", nil)
+	str := os.Getenv("User") + ":" + os.Getenv("Pass") + "@(" + os.Getenv("Ip") + ":" + os.Getenv("Port") + ")/db"
+	conn, err := sql.Open("mysql", str)
+	if err != nil {
+		panic("DB connect error")
+	}
 	bh := c.BaseHandler{
-		Db:     db,
+		Db:     conn,
 		Select: f.SelectShortURL,
 		Insert: f.InsertURLs,
 	}
 
 	http.HandleFunc("/setShort", bh.SetShortLink)
-	/*
-		пользователь подает бред
-	*/
 	http.HandleFunc("/", bh.Index)
-	http.ListenAndServe(":80", nil)
+	err = http.ListenAndServe(":", nil)
+	if err != nil {
+		panic(err)
+	}
 }

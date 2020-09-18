@@ -4,18 +4,19 @@ import (
 	"crypto/md5"
 	"database/sql"
 	"encoding/hex"
-	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"time"
 )
 
-func GetSQLConnection(driver, user, pass, server, port, db string, writer http.ResponseWriter) *sql.DB {
-	conn, err := sql.Open(driver, user+":"+pass+"@("+server+":"+port+")/"+db)
+func ValidateUserShortURL(link string) bool {
+	ret, err := regexp.MatchString("[a-zA-Z0-9-]", link)
 	if err != nil {
-		http.Error(writer, "DB connect error", http.StatusBadRequest)
+		return false
 	}
-	return conn
+
+	return ret && (len(link) < 25)
 }
 
 func ValidateLink(link string) bool {
@@ -25,7 +26,7 @@ func ValidateLink(link string) bool {
 	}
 
 	u, err := url.Parse(link)
-	if err != nil || u.Scheme == "" || u.Host == "" {
+	if err != nil || u.Scheme == "" || u.Host == "" || len(link) > 100 {
 		return false
 	}
 

@@ -24,6 +24,48 @@ func TestCreateLink(t *testing.T) {
 
 }
 
+func TestValidateUserShortURL(t *testing.T) {
+	str := "fghjrt"
+
+	ret := f.ValidateUserShortURL(str)
+
+	if ret == false {
+		t.Errorf(str + " is invalid. Why?")
+	}
+
+	str = "123sfg"
+
+	ret = f.ValidateUserShortURL(str)
+
+	if ret == false {
+		t.Errorf(str + " is invalid. Why?")
+	}
+
+	str = "абвгд"
+
+	ret = f.ValidateUserShortURL(str)
+
+	if ret == true {
+		t.Errorf(str + " is valid. Why?")
+	}
+
+	str = "абвгдабвгдабвгдабвгдабвгдабвгд" //30
+
+	ret = f.ValidateUserShortURL(str)
+
+	if ret == true {
+		t.Errorf(str + " is valid. Why?")
+	}
+
+	str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" //30
+
+	ret = f.ValidateUserShortURL(str)
+
+	if ret == true {
+		t.Errorf(str + " is valid. Why?")
+	}
+}
+
 func TestValidateLink(t *testing.T) {
 	link := "http://google.com"
 	res := f.ValidateLink(link)
