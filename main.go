@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	str := os.Getenv("User") + ":" + os.Getenv("Pass") + "@(" + os.Getenv("Ip") + ":" + os.Getenv("Port") + ")/db"
+	str := os.Getenv("User") + ":" + os.Getenv("Pass") + "@(" + os.Getenv("Ip") + ":" + os.Getenv("PortDB") + ")/db"
 	conn, err := sql.Open("mysql", str)
 	if err != nil {
 		panic("DB connect error")
@@ -23,7 +23,7 @@ func main() {
 
 	http.HandleFunc("/setShort", bh.SetShortLink)
 	http.HandleFunc("/", bh.Index)
-	err = http.ListenAndServe(":", nil)
+	err = http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 	if err != nil {
 		panic(err)
 	}
