@@ -3,6 +3,7 @@
   <a href="https://travis-ci.org/github/x421/URLService"><img src="https://travis-ci.org/x421/URLService.svg" alt="Build Status"></a>
 </p>
 <hr>
+
 ## Сервис по сокращению ссылок.<br>
 База данных: MySQL<br>
 CI/CD: travis/heroku<br>
@@ -11,6 +12,7 @@ CI/CD: travis/heroku<br>
 
 ## Описание контроллеров:
 <hr>
+
   ### /setShort : метод Post, тип принимаемых данных JSON <br>
   Пример входных данных
   ```json
