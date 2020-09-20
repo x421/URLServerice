@@ -10,6 +10,7 @@ import (
 )
 
 func main() {
+
 	str := os.Getenv("User") + ":" + os.Getenv("Pass") + "@(" + os.Getenv("Ip") + ":" + os.Getenv("PortDB") + ")/db"
 	conn, err := sql.Open("mysql", str)
 	if err != nil {
@@ -27,4 +28,5 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
 }
