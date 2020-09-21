@@ -3,12 +3,9 @@ COPY . /go/src/LinksService
 
 WORKDIR /go/src
 RUN go get "github.com/go-sql-driver/mysql"
-RUN export User=root
-RUN export Pass=root
-RUN export Ip=127.0.0.1
-RUN export PortDB=3306
-RUN export PORT=8080
 
-RUN set -ex; CGO_ENABLED=0 GOOS=linux GOARCH=amd64; go build -o ./service LinksService
+COPY ./static /go/src/static
+RUN set -ex; CGO_ENABLED=1 GOOS=linux GOARCH=amd64; go build -ldflags '-linkmode external -w -extldflags "-static"' -o ./service LinksService
 
-CMD /bin/bash
+EXPOSE 8080
+ENTRYPOINT ./service

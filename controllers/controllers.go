@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
+	"os"
 )
 
 type BaseHandler struct {
@@ -41,7 +42,7 @@ func (bh *BaseHandler) SetShortLink(writer http.ResponseWriter, request *http.Re
 
 	// не факт конечно что эти ошибки, но эти вероятны в 99 случаях
 	if err != nil {
-		http.Error(writer, "Same short link already ib DB", http.StatusBadRequest)
+		http.Error(writer, err.Error()+os.Getenv("User")+":"+os.Getenv("Pass")+"@("+os.Getenv("Ip")+":"+os.Getenv("PortDB")+")/db", http.StatusBadRequest) // "Same short link already ib DB"
 		return
 	}
 
@@ -72,5 +73,8 @@ func (bh *BaseHandler) Index(writer http.ResponseWriter, request *http.Request) 
 		return
 	}
 	http.ServeFile(writer, request, "static/index.html")
-	//fmt.Fprintf(writer, "Hello")
+}
+
+func (bh *BaseHandler) FaviconHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "static/favicon.ico")
 }

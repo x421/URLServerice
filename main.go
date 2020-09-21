@@ -24,6 +24,7 @@ func main() {
 
 	http.HandleFunc("/setShort", bh.SetShortLink)
 	http.HandleFunc("/", bh.Index)
+	http.HandleFunc("/favicon.ico", bh.FaviconHandler)
 	err = http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 	if err != nil {
 		panic(err)

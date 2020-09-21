@@ -38,7 +38,7 @@
 					$("#Result").text("Your short URL: "+result["URL"])
 				},
 				error: function(result) {
-					$("#Result").text("Server error!")
+					$("#Result").text("Server error!:"+result.toString())
 				}
 			});
 		});
