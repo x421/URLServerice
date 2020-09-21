@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
-	"os"
 )
 
 type BaseHandler struct {
@@ -42,7 +41,7 @@ func (bh *BaseHandler) SetShortLink(writer http.ResponseWriter, request *http.Re
 
 	// не факт конечно что эти ошибки, но эти вероятны в 99 случаях
 	if err != nil {
-		http.Error(writer, err.Error()+os.Getenv("User")+":"+os.Getenv("Pass")+"@("+os.Getenv("Ip")+":"+os.Getenv("PortDB")+")/db", http.StatusBadRequest) // "Same short link already ib DB"
+		http.Error(writer, "Same short link already ib DB or base error", http.StatusBadRequest) //
 		return
 	}
 
